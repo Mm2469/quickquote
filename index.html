@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuickQuote — Quote & Invoice Generator</title>
+
+<style>
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --text: #17202a;
+  --muted: #68727d;
+  --line: #dfe4e8;
+  --accent: #111827;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  background: #111827;
+  color: white;
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+header span {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 390px 1fr;
+  gap: 22px;
+}
+
+.panel,
+.invoice {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px #1118270b;
+}
+
+.panel {
+  padding: 20px;
+  height: max-content;
+}
+
+.panel h2 {
+  font-size: 15px;
+  margin: 0 0 14px;
+}
+
+.section {
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+  margin: 9px 0 5px;
+  color: #4b5563;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #cfd6dd;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  background: white;
+}
+
+textarea {
+  min-height: 65px;
+  resize: vertical;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  background: #111827;
+  color: white;
+  width: 100%;
+}
+
+.secondary {
+  background: #eef1f4;
+  color: #111827;
+}
+
+.items-head,
+.item {
+  display: grid;
+  grid-template-columns: 1fr 70px 90px 32px;
+  gap: 7px;
+  align-items: center;
+}
+
+.items-head {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.item {
+  margin-bottom: 7px;
+}
+
+.item input {
+  padding: 8px;
+}
+
+.remove {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 7px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.actions button {
+  width: 100%;
+}
+
+.invoice {
+  padding: 42px;
+  min-height: 760px;
+}
+
+.inv-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  border-bottom: 2px solid #111827;
+  padding-bottom: 24px;
+}
+
+.brand h2 {
+  font-size: 28px;
+  margin: 0 0 7px;
+}
+
+.brand p,
+.meta p {
+  margin: 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.meta {
+  text-align: right;
+}
+
+.meta h3 {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.bill {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin: 28px 0;
+}
+
+.bill h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 7px;
+}
+
+.bill p {
+  margin: 2px 0;
+  font-size: 13px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding: 9px 5px;
+}
+
+td {
+  padding: 12px 5px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+th:not(:first-child),
+td:not(:first-child) {
+  text-align: right;
+}
+
+.totals {
+  margin: 24px 0 0 auto;
+  max-width: 280px;
+}
+
+.totals div {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.totals .grand {
+  border-top: 2px solid #111827;
+  margin-top: 5px;
+  padding-top: 11px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.notes {
+  margin-top: 35px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.notes h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+
+.notes p {
+  font-size: 12px;
+  white-space: pre-line;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice {
+    padding: 25px;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .app {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .panel,
+  header {
+    display: none;
+  }
+
+  .invoice {
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    min-height: auto;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>QuickQuote</h1>
+  <span>Simple quote & invoice generator</span>
+</header>
+
+<div class="app">
+
+<section class="panel">
+
+  <div class="section">
+    <h2>Your Business</h2>
+
+    <label>Business Name</label>
+    <input id="biz" value="Your Business">
+
+    <label>Email / Phone</label>
+    <input id="contact" value="you@example.com">
+
+    <label>Address</label>
+    <textarea id="address">123 Main Street
+Your City, ST 00000</textarea>
+  </div>
+
+  <div class="section">
+    <h2>Customer</h2>
+
+    <label>Customer Name</label>
+    <input id="customer" value="Customer Name">
+
+    <label>Customer Email</label>
+    <input id="customerEmail" value="customer@example.com">
+
+    <label>Customer Address</label>
+    <textarea id="customerAddress">Customer address</textarea>
+  </div>
+
+  <div class="section">
+    <h2>Document</h2>
+
+    <div class="row">
+
+      <div>
+        <label>Type</label>
+
+        <select id="docType">
+          <option>Invoice</option>
+          <option>Quote</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Number</label>
+        <input id="number" value="INV-1001">
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div>
+        <label>Date</label>
+        <input id="date" type="date">
+      </div>
+
+      <div>
+        <label>Due Date</label>
+        <input id="due" type="date">
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+
+    <h2>Line Items</h2>
+
+    <div class="items-head">
+      <span>Description</span>
+      <span>Qty</span>
+      <span>Price</span>
+      <span></span>
+    </div>
+
+    <div id="items"></div>
+
+    <button class="secondary" id="add">
+      + Add Item
+    </button>
+
+  </div>
+
+  <div class="section">
+
+    <div class="row">
+
+      <div>
+        <label>Tax %</label>
+        <input id="tax" type="number" min="0" step=".01" value="0">
+      </div>
+
+      <div>
+        <label>Currency</label>
+
+        <select id="currency">
+          <option value="$">$ USD</option>
+          <option value="€">€ EUR</option>
+          <option value="£">£ GBP</option>
+        </select>
+      </div>
+
+    </div>
+
+    <label>Notes / Payment Terms</label>
+
+    <textarea id="notes">Thank you for your business.</textarea>
+
+  </div>
+
+  <div class="actions">
+
+    <button class="secondary" id="clear">
+      Clear
+    </button>
+
+    <button class="primary" id="print">
+      Print / Save PDF
+    </button>
+
+  </div>
+
+</section>
+
+<section class="invoice" id="invoice">
+
+  <div class="inv-top">
+
+    <div class="brand">
+
+      <h2 id="oBiz">
+        Your Business
+      </h2>
+
+      <p id="oContact"></p>
+      <p id="oAddress"></p>
+
+    </div>
+
+    <div class="meta">
+
+      <h3 id="oType">
+        INVOICE
+      </h3>
+
+      <p>
+        <strong id="oNumber"></strong>
+      </p>
+
+      <p>
+        Date: <span id="oDate"></span>
+      </p>
+
+      <p>
+        Due: <span id="oDue"></span>
+      </p>
+
+    </div>
+
+  </div>
+
+  <div class="bill">
+
+    <div>
+
+      <h4>Bill To</h4>
+
+      <p id="oCustomer"></p>
+      <p id="oCustomerEmail"></p>
+      <p id="oCustomerAddress"></p>
+
+    </div>
+
+  </div>
+
+  <table>
+
+    <thead>
+
+      <tr>
+        <th>Description</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Amount</th>
+      </tr>
+
+    </thead>
+
+    <tbody id="outItems"></tbody>
+
+  </table>
+
+  <div class="totals">
+
+    <div>
+      <span>Subtotal</span>
+      <span id="subtotal">$0.00</span>
+    </div>
+
+    <div>
+      <span>Tax</span>
+      <span id="taxOut">$0.00</span>
+    </div>
+
+    <div class="grand">
+      <span>Total</span>
+      <span id="total">$0.00</span>
+    </div>
+
+  </div>
+
+  <div class="notes">
+
+    <h4>Notes</h4>
+
+    <p id="oNotes"></p>
+
+  </div>
+
+</section>
+
+</div>
+
+<script>
+
+const $ = id => document.getElementById(id);
+
+const fields = [
+  'biz',
+  'contact',
+  'address',
+  'customer',
+  'customerEmail',
+  'customerAddress',
+  'docType',
