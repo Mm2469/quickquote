@@ -552,15 +552,177 @@ Your City, ST 00000</textarea>
 
 </div>
 
-<script>
 
+<script>
 const $ = id => document.getElementById(id);
 
 const fields = [
-  'biz',
-  'contact',
-  'address',
-  'customer',
-  'customerEmail',
-  'customerAddress',
-  'docType',
+  "biz", "contact", "address",
+  "customer", "customerEmail", "customerAddress",
+  "docType", "number", "date", "due",
+  "tax", "currency", "notes"
+];
+
+const today = new Date();
+const dateValue = d => {
+  const offset = d.getTimezoneOffset();
+  return new Date(d.getTime() - offset * 60000)
+    .toISOString().slice(0, 10);
+};
+
+$("date").value = dateValue(today);
+
+const money = amount => {
+  const currency = $("currency").value;
+  const symbol = { "$": "$", "€": "€", "£": "£" }[currency];
+  return symbol + amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
+function addItem(description = "", qty = 1, price = 0) {
+  const row = document.createElement("div");
+  row.className = "item";
+
+  const desc = document.createElement("input");
+  desc.placeholder = "Description";
+  desc.value = description;
+  desc.setAttribute("aria-label", "Item description");
+
+  const quantity = document.createElement("input");
+  quantity.type = "number";
+  quantity.min = "0";
+  quantity.step = "any";
+  quantity.value = qty;
+  quantity.setAttribute("aria-label", "Quantity");
+
+  const cost = document.createElement("input");
+  cost.type = "number";
+  cost.min = "0";
+  cost.step = "any";
+  cost.value = price;
+  cost.setAttribute("aria-label", "Unit price");
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "remove";
+  remove.textContent = "×";
+  remove.title = "Remove item";
+  remove.setAttribute("aria-label", "Remove item");
+
+  [desc, quantity, cost].forEach(input => {
+    input.addEventListener("input", updateInvoice);
+  });
+
+  remove.addEventListener("click", () => {
+    row.remove();
+    updateInvoice();
+  });
+
+  row.append(desc, quantity, cost, remove);
+  $("items").appendChild(row);
+  updateInvoice();
+}
+
+function setText(id, value) {
+  $(id).textContent = value;
+}
+
+function updateInvoice() {
+  fields.forEach(id => {
+    const output = {
+      biz: "oBiz",
+      contact: "oContact",
+      address: "oAddress",
+      customer: "oCustomer",
+      customerEmail: "oCustomerEmail",
+      customerAddress: "oCustomerAddress",
+      number: "oNumber",
+      date: "oDate",
+      due: "oDue",
+      notes: "oNotes"
+    }[id];
+
+    if (output) {
+      let value = $(id).value;
+      if (id === "date" || id === "due") {
+        if (value) {
+          const [y, m, d] = value.split("-");
+          value = `${m}/${d}/${y}`;
+        }
+      }
+      setText(output, value);
+    }
+  });
+
+  setText("oType", $("docType").value.toUpperCase());
+
+  const tbody = $("outItems");
+  tbody.replaceChildren();
+
+  let subtotal = 0;
+
+  document.querySelectorAll("#items .item").forEach(row => {
+    const inputs = row.querySelectorAll("input");
+    const description = inputs[0].value;
+    const qty = Math.max(0, Number(inputs[1].value) || 0);
+    const price = Math.max(0, Number(inputs[2].value) || 0);
+    const amount = qty * price;
+
+    subtotal += amount;
+
+    const tr = document.createElement("tr");
+
+    [description, qty, money(price), money(amount)].forEach(value => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  const taxRate = Math.max(0, Number($("tax").value) || 0);
+  const tax = subtotal * taxRate / 100;
+  const total = subtotal + tax;
+
+  setText("subtotal", money(subtotal));
+  setText("taxOut", money(tax));
+  setText("total", money(total));
+}
+
+fields.forEach(id => {
+  $(id).addEventListener("input", updateInvoice);
+  $(id).addEventListener("change", updateInvoice);
+});
+
+$("add").addEventListener("click", () => addItem());
+$("print").addEventListener("click", () => window.print());
+
+$("clear").addEventListener("click", () => {
+  if (!confirm("Clear this document and reset all fields?")) return;
+
+  $("biz").value = "";
+  $("contact").value = "";
+  $("address").value = "";
+  $("customer").value = "";
+  $("customerEmail").value = "";
+  $("customerAddress").value = "";
+  $("docType").value = "Invoice";
+  $("number").value = "INV-1001";
+  $("date").value = dateValue(new Date());
+  $("due").value = "";
+  $("tax").value = "0";
+  $("currency").value = "$";
+  $("notes").value = "";
+  $("items").replaceChildren();
+
+  addItem();
+  updateInvoice();
+});
+
+addItem("Example service", 1, 100);
+updateInvoice();
+</script>
+
